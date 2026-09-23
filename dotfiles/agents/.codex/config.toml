@@ -1,8 +1,8 @@
 service_tier = "default"
-model = "gpt-5.6-luna"
+model = "gpt-6-luna"
 model_context_window = 600000
 model_auto_compact_token_limit = 500000
-model_reasoning_effort = "xhigh"
+model_reasoning_effort = "high"
 plan_mode_reasoning_effort = "high"
 approvals_reviewer = "auto_review"
 notify = [
@@ -85,10 +85,12 @@ status_line = [
 ]
 status_line_use_colors = true
 theme = "ansi"
+screen_reader_detection_done = true
 
 [tui.model_availability_nux]
 "gpt-5.5" = 4
 "gpt-5.6-sol" = 4
+gpt-6-astra = 2
 
 [mcp_servers.openaiDeveloperDocs]
 url = "https://developers.openai.com/mcp"
