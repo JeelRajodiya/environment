@@ -870,6 +870,18 @@ export class PolishedEditor extends CustomEditor {
 		this.onMinimalistDecorationChange = onMinimalistDecorationChange;
 	}
 
+	override handleInput(data: string): void {
+		super.handleInput(data);
+		if (data !== " " || this.isShowingAutocomplete()) return;
+		const cursor = this.getCursor();
+		const textBeforeCursor = (this.getLines()[cursor.line] ?? "").slice(0, cursor.col);
+		if (cursor.line !== 0 || !/^\s*\/\S+\s/.test(textBeforeCursor)) return;
+		const trigger = (
+			this as unknown as { tryTriggerAutocomplete?: () => void }
+		).tryTriggerAutocomplete;
+		if (typeof trigger === "function") trigger.call(this);
+	}
+
 	private reportMinimalistDecoration(active: boolean): void {
 		this.onMinimalistDecorationChange(active);
 	}
