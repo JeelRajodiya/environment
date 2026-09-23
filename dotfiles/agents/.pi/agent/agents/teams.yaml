@@ -52,7 +52,7 @@ default:
         fast: false
       orchestrator:
         model: openai-codex/gpt-6-luna
-        thinking: max
+        thinking: xhigh
 
 plan-build:
   - planner
