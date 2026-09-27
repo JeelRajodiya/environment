@@ -15,6 +15,21 @@ command -v stow >/dev/null || {
     exit 1
 }
 
+# Codex discovers symlinked skill directories, but not the SKILL.md file links
+# created inside real directories by Stow's --no-folding mode.
+skill_roots=(.agents/skills .codex/skills)
+for root in "${skill_roots[@]}"; do
+    source_root="$DOTFILES_DIR/agents/$root"
+    [ -d "$source_root" ] || continue
+    for source_skill in "$source_root"/*; do
+        [ -d "$source_skill" ] || continue
+        target_skill="$HOME/$root/$(basename "$source_skill")"
+        if [ -L "$target_skill" ] && [ "$(realpath "$target_skill")" = "$source_skill" ]; then
+            rm "$target_skill"
+        fi
+    done
+done
+
 # Remove dangling or obsolete symlinks pointing to this repo before stowing
 while IFS= read -r -d '' link; do
     target="$(readlink "$link")"
@@ -34,5 +49,29 @@ done < <(
 )
 
 stow --no-folding --dir="$DOTFILES_DIR" --target="$HOME" "${packages[@]}"
-echo "Already linked: ${packages[*]}"
 
+for root in "${skill_roots[@]}"; do
+    source_root="$DOTFILES_DIR/agents/$root"
+    [ -d "$source_root" ] || continue
+    for source_skill in "$source_root"/*; do
+        [ -d "$source_skill" ] || continue
+        target_skill="$HOME/$root/$(basename "$source_skill")"
+        [ -d "$target_skill" ] || continue
+        [ -L "$target_skill" ] && continue
+
+        while IFS= read -r -d '' path; do
+            relative="${path#"$target_skill"/}"
+            expected="$source_skill/$relative"
+            if [ -d "$path" ] && [ ! -L "$path" ]; then
+                [ -d "$expected" ] || { echo "Unmanaged skill directory: $path" >&2; exit 1; }
+            elif [ ! -L "$path" ] || [ "$(realpath "$path")" != "$(realpath "$expected")" ]; then
+                echo "Unmanaged skill file: $path" >&2
+                exit 1
+            fi
+        done < <(find "$target_skill" -mindepth 1 -print0)
+
+        rm -rf "$target_skill"
+        ln -s "$source_skill" "$target_skill"
+    done
+done
+echo "Already linked: ${packages[*]}"
