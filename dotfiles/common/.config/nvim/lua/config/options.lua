@@ -17,7 +17,7 @@ o.fileencoding = "utf-8"
 
 -- disable word wrap:
 o.wrap = false
-o.virtualedit = "all"
+o.virtualedit = ""
 o.mousescroll = "ver:1,hor:1"
 o.sidescroll = 10
 o.sidescrolloff = 10
