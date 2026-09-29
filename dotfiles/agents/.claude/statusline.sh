@@ -7,7 +7,7 @@ MODEL=$(echo "$input" | jq -r '.model.display_name')
 # Context window percentage + progress bar
 PCT=$(echo "$input" | jq -r '.context_window.used_percentage // 0' | cut -d. -f1)
 GREEN='\033[38;5;114m'; YELLOW='\033[38;5;179m'; RED='\033[38;5;167m'
-BLUE='\033[38;5;75m'; PURPLE='\033[38;5;176m'; GRAY='\033[38;5;242m'; SOFT='\033[38;5;250m'
+CLAUDE='\033[91m'; GRAY='\033[38;5;242m'; SOFT='\033[38;5;250m'
 BOLD='\033[1m'; RESET='\033[0m'
 
 if [ "$PCT" -ge 90 ]; then BAR_COLOR="$RED"
@@ -61,8 +61,15 @@ MONTHLY_FMT=$(printf '$%.0f' "$MONTHLY_COST")
 
 # Effort level (only present when the model supports it)
 EFFORT=$(echo "$input" | jq -r '.effort.level // empty')
-MODEL_SEG="${BOLD}${BLUE}${MODEL}${RESET}"
-[ -n "$EFFORT" ] && MODEL_SEG="${MODEL_SEG} ${PURPLE}${EFFORT}${RESET}"
+MODEL_SEG="${BOLD}${CLAUDE}${MODEL}${RESET}"
+# Effort color: Claude color at low/medium, shifting toward red as effort rises
+case "$EFFORT" in
+  high)  EFFORT_COLOR='\033[38;5;203m' ;;
+  xhigh) EFFORT_COLOR='\033[38;5;196m' ;;
+  max)   EFFORT_COLOR='\033[1;38;5;160m' ;;
+  *)     EFFORT_COLOR="$CLAUDE" ;;
+esac
+[ -n "$EFFORT" ] && MODEL_SEG="${MODEL_SEG} ${EFFORT_COLOR}${EFFORT}${RESET}"
 
 # Subscription usage windows (only present for Pro/Max after first API response)
 fmt_limit() {
