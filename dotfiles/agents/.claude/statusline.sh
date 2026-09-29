@@ -6,7 +6,9 @@ MODEL=$(echo "$input" | jq -r '.model.display_name')
 
 # Context window percentage + progress bar
 PCT=$(echo "$input" | jq -r '.context_window.used_percentage // 0' | cut -d. -f1)
-GREEN='\033[32m'; YELLOW='\033[33m'; RED='\033[31m'; CYAN='\033[36m'; DIM='\033[2m'; RESET='\033[0m'
+GREEN='\033[38;5;114m'; YELLOW='\033[38;5;179m'; RED='\033[38;5;167m'
+BLUE='\033[38;5;75m'; PURPLE='\033[38;5;176m'; GRAY='\033[38;5;242m'; SOFT='\033[38;5;250m'
+BOLD='\033[1m'; RESET='\033[0m'
 
 if [ "$PCT" -ge 90 ]; then BAR_COLOR="$RED"
 elif [ "$PCT" -ge 70 ]; then BAR_COLOR="$YELLOW"
@@ -15,18 +17,19 @@ else BAR_COLOR="$GREEN"; fi
 BAR_WIDTH=10
 FILLED=$((PCT * BAR_WIDTH / 100))
 EMPTY=$((BAR_WIDTH - FILLED))
-BAR=""
-[ "$FILLED" -gt 0 ] && BAR=$(printf "%${FILLED}s" | tr ' ' '█')
-[ "$EMPTY" -gt 0 ] && BAR="${BAR}$(printf "%${EMPTY}s" | tr ' ' '░')"
+BAR_ON=""; BAR_OFF=""
+[ "$FILLED" -gt 0 ] && BAR_ON=$(printf "%${FILLED}s" | sed 's/ /━/g')
+[ "$EMPTY" -gt 0 ] && BAR_OFF=$(printf "%${EMPTY}s" | sed 's/ /─/g')
+BAR="${BAR_COLOR}${BAR_ON}${GRAY}${BAR_OFF}${RESET}"
 
 # Usage stats
-INPUT_TOKENS=$(echo "$input" | jq -r '.context_window.total_input_tokens // 0')
-OUTPUT_TOKENS=$(echo "$input" | jq -r '.context_window.total_output_tokens // 0')
 COST=$(echo "$input" | jq -r '.cost.total_cost_usd // 0')
 COST_FMT=$(printf '$%.2f' "$COST")
 DURATION_MS=$(echo "$input" | jq -r '.cost.total_duration_ms // 0')
-MINS=$((DURATION_MS / 60000))
-SECS=$(((DURATION_MS % 60000) / 1000))
+TOTAL_SECS=$((DURATION_MS / 1000))
+if [ "$TOTAL_SECS" -ge 3600 ]; then DUR="$((TOTAL_SECS / 3600))h$(printf '%02d' $((TOTAL_SECS % 3600 / 60)))m"
+elif [ "$TOTAL_SECS" -ge 60 ]; then DUR="$((TOTAL_SECS / 60))m$(printf '%02d' $((TOTAL_SECS % 60)))s"
+else DUR="${TOTAL_SECS}s"; fi
 SESSION_ID=$(echo "$input" | jq -r '.session_id')
 
 # Monthly cost accumulator
@@ -54,24 +57,30 @@ trap - EXIT
 
 # Sum all costs for current month
 MONTHLY_COST=$(awk -v month="$CURRENT_MONTH" '$1 == month { sum += $3 } END { printf "%.2f", sum }' "$MONTHLY_CACHE")
-MONTHLY_FMT=$(printf '$%s' "$MONTHLY_COST")
+MONTHLY_FMT=$(printf '$%.0f' "$MONTHLY_COST")
 
-# Format token counts (e.g. 15234 -> 15.2k)
-fmt_tokens() {
-  local t=$1
-  if [ "$t" -ge 1000000 ]; then
-    printf "%.1fM" "$(echo "$t / 1000000" | bc -l)"
-  elif [ "$t" -ge 1000 ]; then
-    printf "%.1fk" "$(echo "$t / 1000" | bc -l)"
-  else
-    echo "$t"
-  fi
+# Effort level (only present when the model supports it)
+EFFORT=$(echo "$input" | jq -r '.effort.level // empty')
+MODEL_SEG="${BOLD}${BLUE}${MODEL}${RESET}"
+[ -n "$EFFORT" ] && MODEL_SEG="${MODEL_SEG} ${PURPLE}${EFFORT}${RESET}"
+
+# Subscription usage windows (only present for Pro/Max after first API response)
+fmt_limit() {
+  local label=$1 used=$2
+  [ -z "$used" ] && return
+  used=${used%.*}
+  local color="$GREEN"
+  [ "$used" -ge 90 ] && color="$RED" || { [ "$used" -ge 70 ] && color="$YELLOW"; }
+  printf "%b%s%b %b%s%%%b" "$GRAY" "$label" "$RESET" "$color" "$used" "$RESET"
 }
+FIVE=$(fmt_limit "5h" "$(echo "$input" | jq -r '.rate_limits.five_hour.used_percentage // empty')")
+WEEK=$(fmt_limit "7d" "$(echo "$input" | jq -r '.rate_limits.seven_day.used_percentage // empty')")
+LIMITS=""
+[ -n "$FIVE" ] && LIMITS="$FIVE"
+[ -n "$WEEK" ] && LIMITS="${LIMITS:+$LIMITS  }$WEEK"
 
-IN_FMT=$(fmt_tokens "$INPUT_TOKENS")
-OUT_FMT=$(fmt_tokens "$OUTPUT_TOKENS")
-
-# Line 1: Context
-echo -e "${CYAN}[$MODEL]${RESET} ${BAR_COLOR}${BAR}${RESET} ${PCT}% context"
-# Line 2: Usage
-echo -e "${DIM}↑${RESET}${IN_FMT} ${DIM}↓${RESET}${OUT_FMT} ${DIM}|${RESET} ${YELLOW}~${COST_FMT} est.${RESET} ${DIM}(${MONTHLY_FMT} this mo)${RESET} ${DIM}|${RESET} ⏱ ${MINS}m${SECS}s"
+SEP="  ${GRAY}│${RESET}  "
+OUT="${MODEL_SEG}${SEP}${BAR} ${SOFT}${PCT}%${RESET}"
+[ -n "$LIMITS" ] && OUT="${OUT}${SEP}${LIMITS}"
+OUT="${OUT}${SEP}${YELLOW}${COST_FMT}${RESET} ${GRAY}· ${MONTHLY_FMT}/mo${RESET}${SEP}${GRAY}${DUR}${RESET}"
+echo -e "$OUT"
