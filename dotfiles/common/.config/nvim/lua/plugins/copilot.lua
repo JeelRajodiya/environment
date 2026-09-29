@@ -2,6 +2,7 @@ return {
   -- Official GitHub Copilot
   {
     "github/copilot.vim",
+    enabled = false,
     event = "InsertEnter",
     cmd = "Copilot",
     config = function()
