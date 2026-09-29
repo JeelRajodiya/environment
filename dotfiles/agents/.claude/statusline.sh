@@ -72,16 +72,25 @@ esac
 [ -n "$EFFORT" ] && MODEL_SEG="${MODEL_SEG} ${EFFORT_COLOR}${EFFORT}${RESET}"
 
 # Subscription usage windows (only present for Pro/Max after first API response)
+# Time left until a window resets, from a Unix epoch (e.g. 3h12m, 5d2h, 14m)
+fmt_remaining() {
+  local left=$(($1 - $(date +%s)))
+  [ "$left" -lt 0 ] && left=0
+  if [ "$left" -ge 86400 ]; then printf '%dd%dh' $((left / 86400)) $((left % 86400 / 3600))
+  elif [ "$left" -ge 3600 ]; then printf '%dh%02dm' $((left / 3600)) $((left % 3600 / 60))
+  else printf '%dm' $((left / 60)); fi
+}
 fmt_limit() {
-  local label=$1 used=$2
+  local used=$1 resets=$2
   [ -z "$used" ] && return
   used=${used%.*}
   local color="$GREEN"
   [ "$used" -ge 90 ] && color="$RED" || { [ "$used" -ge 70 ] && color="$YELLOW"; }
-  printf "%b%s%b %b%s%%%b" "$GRAY" "$label" "$RESET" "$color" "$used" "$RESET"
+  printf "%b%s%%%b" "$color" "$used" "$RESET"
+  [ -n "$resets" ] && printf " %b↻ %s%b" "$GRAY" "$(fmt_remaining "${resets%.*}")" "$RESET"
 }
-FIVE=$(fmt_limit "5h" "$(echo "$input" | jq -r '.rate_limits.five_hour.used_percentage // empty')")
-WEEK=$(fmt_limit "7d" "$(echo "$input" | jq -r '.rate_limits.seven_day.used_percentage // empty')")
+FIVE=$(fmt_limit "$(echo "$input" | jq -r '.rate_limits.five_hour.used_percentage // empty')" "$(echo "$input" | jq -r '.rate_limits.five_hour.resets_at // empty')")
+WEEK=$(fmt_limit "$(echo "$input" | jq -r '.rate_limits.seven_day.used_percentage // empty')" "$(echo "$input" | jq -r '.rate_limits.seven_day.resets_at // empty')")
 LIMITS=""
 [ -n "$FIVE" ] && LIMITS="$FIVE"
 [ -n "$WEEK" ] && LIMITS="${LIMITS:+$LIMITS  }$WEEK"
