@@ -146,3 +146,9 @@ export PATH=/Users/zeelrajodiya/.opencode/bin:$PATH
 
 # Added by Antigravity CLI installer
 export PATH="/Users/zeelrajodiya/.local/bin:$PATH"
+
+# added by e6aws installer
+export PATH="$HOME/bin:$PATH"
+
+# added by e6aws installer - lets `e6aws export N` load creds into the shell
+eval "$(e6aws shell-init)"
