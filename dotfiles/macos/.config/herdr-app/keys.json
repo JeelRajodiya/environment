@@ -92,7 +92,6 @@
     "` v": "pane.split:right",
     "` s": "pane.split:down",
     "` z": "pane.zoom",
-    "` x": "pane.close",
     "` g": "mod.open:picker",
     "` shift-s": "mod.open:picker",
     "` shift-k": "send:clear\r",
