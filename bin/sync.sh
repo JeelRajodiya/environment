@@ -48,6 +48,18 @@ done < <(
     [ ! -L "$HOME/.local/share/plasma" ] || printf '%s\0' "$HOME/.local/share/plasma"
 )
 
+# Herdr creates these on first launch, and Stow refuses to replace a real file.
+# Link them here: a running Herdr recreates a file that is merely moved away.
+for package in "${packages[@]}"; do
+    for file in .config/herdr/config.toml .config/herdr-app/keys.json .config/herdr-app/settings.json; do
+        target="$HOME/$file"
+        if [ -f "$DOTFILES_DIR/$package/$file" ] && [ -f "$target" ] && [ ! -L "$target" ]; then
+            cp -p "$target" "$target.pre-stow"
+            ln -sf "../..${DOTFILES_DIR#"$HOME"}/$package/$file" "$target"
+        fi
+    done
+done
+
 stow --no-folding --dir="$DOTFILES_DIR" --target="$HOME" "${packages[@]}"
 
 for root in "${skill_roots[@]}"; do
