@@ -1,12 +1,15 @@
 {
   "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+    "DISABLE_TELEMETRY": "1",
+    "DISABLE_ERROR_REPORTING": "1",
+    "DISABLE_FEEDBACK_COMMAND": "1"
   },
   "attribution": {
     "commit": "",
     "pr": ""
   },
-  "model": "sonnet",
+  "model": "opus",
   "statusLine": {
     "type": "command",
     "command": "~/.claude/statusline.sh",
@@ -14,21 +17,33 @@
   },
   "enabledPlugins": {
     "typescript-lsp@claude-plugins-official": true,
-    "context7@claude-plugins-official": true,
     "code-simplifier@claude-plugins-official": true,
     "ralph-loop@claude-plugins-official": false,
     "superpowers@claude-plugins-official": false,
     "commit-commands@claude-plugins-official": true,
     "rust-analyzer-lsp@claude-plugins-official": true,
     "jdtls-lsp@claude-plugins-official": true,
-    "firecrawl@claude-plugins-official": true,
-    "explanatory-output-style@claude-plugins-official": false
+    "explanatory-output-style@claude-plugins-official": false,
+    "ponytail@ponytail": true,
+    "swift-lsp@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "caveman": {
       "source": {
         "source": "github",
         "repo": "JuliusBrussee/caveman"
+      }
+    },
+    "openai-codex": {
+      "source": {
+        "source": "github",
+        "repo": "openai/codex-plugin-cc"
+      }
+    },
+    "ponytail": {
+      "source": {
+        "source": "github",
+        "repo": "DietrichGebert/ponytail"
       }
     }
   },
@@ -41,10 +56,15 @@
       "effortLevel": "high"
     },
     "claude-opus-5-5": {
+      "effortLevel": "xhigh"
+    },
+    "claude-fable-5-2": {
       "effortLevel": "high"
     }
   },
+  "advisorModel": "opus",
   "tui": "default",
+  "skipWorkflowUsageWarning": true,
   "theme": "dark-ansi",
   "editorMode": "vim",
   "verbose": false,
@@ -52,5 +72,32 @@
   "remoteControlAtStartup": false,
   "inputNeededNotifEnabled": true,
   "agentPushNotifEnabled": true,
-  "skipAutoPermissionPrompt": true
+  "autoMode": {
+    "environment": [
+      "### Org-wide",
+      "**Organization**: None configured",
+      "**Cloud provider(s)**: None configured",
+      "**Repository visibility**: Not queryable here (org/repo not derivable from origin remote — a non-standard SSH host alias `github.com-personal` is used). Assume private; remote is `github.com-personal:JeelRajodiya/e6-scripts.git`",
+      "**Internal sharing / snippet hosting**: None configured — treat public paste/gist services as outside the trust boundary",
+      "**Secrets management**: None configured",
+      "**Default / protected branches**: Default branch is `master`; protected-branch status not queryable (visibility/rulesets check failed to resolve org/repo)",
+      "**CI/CD deploy targets**: None configured",
+      "**Network posture**: None configured",
+      "**Host containment**: None configured — assume Claude Code runs on an ordinary developer machine with open internet",
+      "**Source control**: The trusted repo (/Users/zeelrajodiya/Projects/e6data/scripts) and its remote `github.com-personal:JeelRajodiya/e6-scripts.git` only",
+      "**Trusted internal domains**: None configured",
+      "**Trusted cloud buckets**: None configured",
+      "**Key internal services**: None configured",
+      "**Internal package registry**: None configured",
+      "**Sensitive data locations & audiences**: any file or store holding personal data, confidential business data, credentials, regulated data, or similarly sensitive material; preserve exact handles when known and share only with audiences cleared at the [named+specifics] bar; note `run-helm.sh` was flagged by filename scan as potentially sensitive-looking — review before broad sharing",
+      "**Data retention / declassification**: None configured",
+      "**Sensitive remote targets**: any namespace, host, or container whose name carries `prod` or `production` as a whole word or name segment",
+      "**Protected deployment namespaces / environments**: None configured — fall back to the Sensitive remote targets heuristic",
+      "**Protected IaC scopes**: IAM, RBAC, networking, quota, and node-pool resources; anything whose name or tag carries `prod` or `production` as a whole word or name segment",
+      "### User-specific",
+      "**Primary use of Claude Code**: software development",
+      "**Trusted repo**: /Users/zeelrajodiya/Projects/e6data/scripts (remote: github.com-personal:JeelRajodiya/e6-scripts.git, default branch master)",
+      "**Org-specific CLIs**: None configured"
+    ]
+  }
 }
