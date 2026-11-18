@@ -10,7 +10,7 @@
     "openai-codex/gpt-5.3-codex-spark": "medium"
   },
   "hideThinkingBlock": true,
-  "lastChangelogVersion": "0.85.1",
+  "lastChangelogVersion": "1.0.0",
   "tuiMode": "fullscreen",
   "enableInstallTelemetry": false,
   "quietStartup": false,
@@ -44,5 +44,8 @@
     "npm:pi-antigravity"
   ],
   "enableSkillCommands": true,
-  "showHardwareCursor": true
+  "showHardwareCursor": true,
+  "extensions": [
+    "-builtin:mcp"
+  ]
 }
