@@ -1,5 +1,5 @@
-service_tier = "default"
-model = "gpt-6-sol"
+service_tier = "fast"
+model = "gpt-6.2-sol"
 model_context_window = 600000
 model_auto_compact_token_limit = 500000
 model_reasoning_effort = "high"
@@ -94,6 +94,7 @@ screen_reader_detection_done = true
 "gpt-5.5" = 4
 "gpt-5.6-sol" = 4
 gpt-6-astra = 4
+"gpt-6.1-sol" = 4
 
 [mcp_servers.openaiDeveloperDocs]
 url = "https://developers.openai.com/mcp"
@@ -136,8 +137,8 @@ source_type = "local"
 source = "/Users/zeelrajodiya/.codex/.tmp/bundled-marketplaces/openai-bundled"
 
 [marketplaces.claude-plugins-official]
-last_updated = "2026-09-21T10:18:43Z"
-last_revision = "c447c3207a425bc4e2a0d068435f64b0477ae981"
+last_updated = "2026-10-03T12:03:25Z"
+last_revision = "d182ca456ca09d31d139f7d3818d1d333b103cce"
 source_type = "git"
 source = "https://github.com/anthropics/claude-plugins-official.git"
 
