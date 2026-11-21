@@ -20,7 +20,7 @@ When asked to trace call chains, dependencies, or code flow, respond with litera
 
 ## Visualizations
 
-When asked to visualize, diagram, animate, or "show" a topic, use the `terminal-viz` skill (colourful ANSI script run in a split pane), not HTML files, unless asked otherwise.
+When asked to visualize, diagram, animate, or "show" a topic, use the `terminal-viz` skill (HTML diagram rendered to PNG slides, shown in a Herdr split pane), unless asked otherwise.
 # graphify
 - **graphify** (`~/.claude/skills/graphify/SKILL.md`) - any input to knowledge graph. Trigger: `/graphify`
 When the user types `/graphify`, use the installed graphify skill or instructions before doing anything else.

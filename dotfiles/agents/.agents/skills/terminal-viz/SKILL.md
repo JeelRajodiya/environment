@@ -1,30 +1,29 @@
 ---
 name: terminal-viz
-description: Explain a topic visually inside the terminal with a colourful, animated ANSI diagram (architecture, data flow, algorithm walk-through, simple charts) drawn by a small Python script the user runs in a split pane. Use whenever the user asks to visualize, diagram, draw, animate, or "show me" how something works or looks, unless they ask for an HTML page, image, or doc instead.
+description: Explain a topic visually (architecture, data flow, algorithm, comparison, simple chart) as a polished diagram image shown in a Herdr split pane next to the chat. Build it as HTML, render it to PNG with headless Chrome, and display it with the Kitty graphics protocol. Use whenever the user asks to visualize, diagram, draw, or "show me" how something works or looks, unless they ask for a browser page, a file, or a doc instead.
 ---
 
-# Terminal visualizations
+# Visual explainers in a Herdr pane
 
-The chat can only show plain text, and your Bash output is never shown to the user. So write a script that draws the visual with ANSI codes, test it yourself, then have the user run it in a pane next to the chat.
+The chat shows only text, and your Bash output is never shown to the user. Draw the visual as HTML, turn it into PNG slides, check them yourself, then open them in a split pane.
 
-1. **Write** `/tmp/claude-viz/<topic>.py`: one file, Python 3 stdlib only. Start from the closest example in this skill's `examples/` dir and copy its helpers (do not import them):
-   - `olap_architecture.py`: architecture diagram. Boxes on a character canvas, and each step lights up some components while the rest turn grey. Enter = next step.
-   - `hash_join.py`: algorithm walk-through. Tables and a hash table that fill up as an auto-play animation.
-2. **Rules**
-   - Fit in 78 columns × 38 rows, the size of a half-width pane.
-   - Use 24-bit colour (`\033[38;2;R;G;Bm`) with one colour per component. Active parts are bold and coloured, inactive parts are grey.
-   - Redraw each frame with `\033[H` + lines joined by `\033[K\n` + `\033[J` so there is no flicker. Hide the cursor and restore it in `finally`.
-   - Each step gets a one- or two-sentence caption in plain words.
-   - Optional speed argument: none = interactive or default speed, `N` = auto-play at N× the timings, `0` = draw every frame instantly (used for the smoke test).
-3. **Smoke test.** Exit code 0, aligned boxes, no line over 78 columns:
+1. **Write** `/tmp/claude-viz/<topic>.html`, starting from `examples/olap.html` in this skill's folder.
+   - Dark theme and cards with one colour per component. Use real arrows (inline SVG), numbered badges for the flow, and short plain captions.
+   - Slides are 1040 CSS px wide and at most ~1000 px tall (portrait, to fit a right split). Put one idea on each slide, such as a diagram slide and a steps slide. Split anything bigger into more slides, because small text is unreadable.
+   - Multiple slides go in one file: each slide is a section with an `id`. CSS shows only the `:target` section, and with no `#id` the first one shows. See the example.
+2. **Render** each slide:
    ```sh
-   python3 -I /tmp/claude-viz/<topic>.py 0 </dev/null > /tmp/claude-viz/out.txt; echo $?
-   python3 -I -c "import re; f=open('/tmp/claude-viz/out.txt').read().split('\x1b[H')[-1]; print(re.sub(r'\x1b\[[0-9;?]*[A-Za-z]','',f))"
+   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --disable-gpu --hide-scrollbars \
+     --force-device-scale-factor=2 --window-size=1040,1000 \
+     --screenshot=/tmp/claude-viz/<topic>-1.png "file:///tmp/claude-viz/<topic>.html#<id>" 2>/dev/null
    ```
-4. **Open it in a split.** In the Herdr desktop app (`herdr-app` is on PATH), open it yourself, using an absolute path:
+3. **Check** every PNG with the Read tool. Look for overlaps, clipped text, misplaced badges, and empty space. Fix the HTML and render again.
+4. **Show** the slides in a split pane (absolute paths; Enter = next slide, q = quit):
    ```sh
-   herdr-app do pane.split '{"direction":"right","argv":["python3","/tmp/claude-viz/<topic>.py"]}'
+   herdr-app do pane.split '{"direction":"right","argv":["python3","/Users/zeelrajodiya/.claude/skills/terminal-viz/show.py","/tmp/claude-viz/<topic>-1.png","/tmp/claude-viz/<topic>-2.png"]}'
    ```
-   Without `herdr-app`, tell the user to split the pane to the right and run `python3 /tmp/claude-viz/<topic>.py`.
+   Wait about 3 s, run `herdr-app shot /tmp/claude-viz/shot.png`, and Read the screenshot to confirm the image is visible. To replace an old viewer, find its pane ID in `herdr-app ls` and close it with `herdr-app do pane.close '{"pane":"<id>"}'`.
 
-If the user wants a browser version instead, write one self-contained HTML file and `open` it.
+`show.py` calls `kitten icat` with Unicode placeholders, stream transfer and a given window size. Herdr hides the pane's pixel size, so plain `icat` fails there.
+
+Panes can't animate. If the user wants animation, or `herdr-app` is missing, add CSS animations to the HTML and `open` it in the browser.

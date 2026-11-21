@@ -1,0 +1,133 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>
+:root{--bg:#1c1f26;--card:#262a33;--line:#363b47;--text:#e8e8f0;--mute:#9095a8;
+--cyan:#8be9fd;--purple:#bd93f9;--orange:#ffb86c;--green:#50fa7b;--pink:#ff79c6;--yellow:#f1fa8c;--red:#ff5555}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--text);font:16px/1.45 -apple-system,"SF Pro Text",Inter,sans-serif;width:1040px;padding:34px 40px 40px}
+h1{font-size:30px;font-weight:750;letter-spacing:-.01em}
+.sub{color:var(--mute);margin-top:4px}
+.wrap{margin-top:26px} #steps{display:none;font-size:18px} #steps:target{display:block} body:has(#steps:target) :is(h1,.sub,#diagram){display:none} #steps .step b{font-size:19px} #steps .step div span{font-size:17px} #steps .n{width:32px;height:32px;font-size:15px} #steps .why div{font-size:15.5px} #steps .why b{font-size:17px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 18px;position:relative}
+.card h3{font-size:14px;letter-spacing:.08em;text-transform:uppercase;display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.n{width:26px;height:26px;border-radius:50%;display:inline-grid;place-items:center;font-weight:800;font-size:13px;color:#1c1f26;flex:none}
+.card>.n{position:absolute;top:-11px;right:-11px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;font-size:14px;font-weight:650;border:1px solid}
+.flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.flow .to{color:var(--mute)}
+code{font:13.5px/1.4 "SF Mono",Menlo,monospace;color:var(--cyan);background:#1c1f26;border-radius:8px;padding:8px 12px;display:block;margin-top:8px}
+.mute{color:var(--mute);font-size:14px}
+svg text{font:600 13px -apple-system,sans-serif}
+.row2{display:grid;grid-template-columns:1fr 70px 230px;align-items:center}
+.workers{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.chip{font-size:12.5px;padding:3px 9px;border-radius:6px;background:#1c1f26;color:var(--mute);display:inline-block;margin-top:8px}
+.shuffle{margin-top:14px;border:1.5px dashed var(--pink);border-radius:12px;padding:8px;text-align:center;color:var(--pink);font-weight:650;position:relative}
+.cols{display:flex;gap:8px;margin-top:10px}
+.col{width:74px;text-align:center;font:12px "SF Mono",Menlo,monospace}
+.col i{display:block;height:9px;border-radius:2px;margin-top:3px;background:var(--yellow)}
+.col.off{opacity:.28}.col.off i{background:var(--red)}
+.months{display:flex;gap:5px;margin-top:8px}
+.m{flex:1;text-align:center;font-size:12px;padding:5px 0;border-radius:6px;background:#1c1f26;color:#5d6273;text-decoration:line-through}
+.m.on{background:var(--yellow);color:#1c1f26;font-weight:800;text-decoration:none}
+.steps{display:flex;flex-direction:column;gap:14px}
+.step{display:flex;gap:12px}
+.step b{display:block;font-size:15.5px}
+.step div span{color:var(--mute);font-size:14.5px}
+.why{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px}
+.why div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13.5px;color:var(--mute)}
+.why b{color:var(--text);display:block;font-size:14.5px}
+h2{font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin-bottom:14px}
+</style></head><body>
+<h1>How an OLAP database runs a query</h1>
+<div class="sub">Analytics over huge tables: few queries, each scanning millions to billions of rows. Storage and compute are separate.</div>
+<div class="wrap">
+<div id="diagram">
+  <div class="card" style="border-top:3px solid var(--cyan)">
+    <span class="n" style="background:var(--cyan)">1</span>
+    <h3 style="color:var(--cyan)">📊 Client</h3>
+    <div class="mute">BI dashboard · SQL editor · notebook</div>
+    <code>SELECT region, SUM(amount) FROM sales WHERE date &gt;= '2026-11-01' GROUP BY region</code>
+  </div>
+  <svg width="960" height="50"><defs>
+    <marker id="a" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="context-stroke"/></marker></defs>
+    <line x1="330" y1="4" x2="330" y2="44" stroke="#8be9fd" stroke-width="2" marker-end="url(#a)"/>
+    <text x="342" y="30" fill="#8be9fd">SQL</text>
+    <line x1="420" y1="44" x2="420" y2="6" stroke="#50fa7b" stroke-width="2" marker-end="url(#a)"/>
+    <text x="432" y="30" fill="#50fa7b">4 result rows</text>
+  </svg>
+  <div class="row2">
+    <div class="card" style="border-top:3px solid var(--purple)">
+      <h3 style="color:var(--purple)">🧠 Coordinator</h3>
+      <div class="flow">
+        <span class="pill" style="border-color:var(--purple);color:var(--purple)"><span class="n" style="background:var(--purple)">2</span>Parse &amp; analyze</span><span class="to">→</span>
+        <span class="pill" style="border-color:var(--purple);color:var(--purple)"><span class="n" style="background:var(--purple)">3</span>Optimize</span><span class="to">→</span>
+        <span class="pill" style="border-color:var(--purple);color:var(--purple)"><span class="n" style="background:var(--purple)">4</span>Schedule</span>
+      </div>
+    </div>
+    <svg width="70" height="40"><line x1="8" y1="20" x2="62" y2="20" stroke="#ffb86c" stroke-width="2" marker-start="url(#a)" marker-end="url(#a)"/></svg>
+    <div class="card" style="border-top:3px solid var(--orange)">
+      <h3 style="color:var(--orange)">📚 Catalog</h3>
+      <div class="mute">tables &amp; columns<br>file lists<br>min/max stats</div>
+    </div>
+  </div>
+  <svg width="960" height="62">
+    <path d="M352,2V22M152,22H808M152,22V56M480,22V56M808,22V56" stroke="#ff79c6" stroke-width="2" fill="none"/>
+    <path d="M146,50L152,60L158,50zM474,50L480,60L486,50zM802,50L808,60L814,50z" fill="#ff79c6"/>
+    <text x="500" y="16" fill="#ff79c6">plan fragments: each worker gets a slice of files</text>
+  </svg>
+  <div class="workers">
+    <div class="card" style="border-top:3px solid var(--green)">
+      <h3 style="color:var(--green)">⚙️ Worker 1</h3>
+      <div class="flow"><span class="pill" style="border-color:var(--green);color:var(--green)"><span class="n" style="background:var(--green)">5</span>Scan</span><span class="to">→</span><span class="pill" style="border-color:var(--green);color:var(--green)"><span class="n" style="background:var(--green)">6</span>Filter · Agg</span></div>
+      <span class="chip">⚡ SSD cache</span> <span class="chip">410M rows → 4 sums</span>
+    </div>
+    <div class="card" style="border-top:3px solid var(--green)">
+      <h3 style="color:var(--green)">⚙️ Worker 2</h3>
+      <div class="flow"><span class="pill" style="border-color:var(--green);color:var(--green)">Scan</span><span class="to">→</span><span class="pill" style="border-color:var(--green);color:var(--green)">Filter · Agg</span></div>
+      <span class="chip">⚡ SSD cache</span> <span class="chip">390M rows → 4 sums</span>
+    </div>
+    <div class="card" style="border-top:3px solid var(--green)">
+      <h3 style="color:var(--green)">⚙️ Worker 3</h3>
+      <div class="flow"><span class="pill" style="border-color:var(--green);color:var(--green)">Scan</span><span class="to">→</span><span class="pill" style="border-color:var(--green);color:var(--green)">Filter · Agg</span></div>
+      <span class="chip">⚡ SSD cache</span> <span class="chip">405M rows → 4 sums</span>
+    </div>
+  </div>
+  <div class="shuffle"><span class="n" style="background:var(--pink);position:absolute;left:14px;top:7px">7</span>⇄ shuffle partial sums by hash(region) → each region summed on one worker</div>
+  <svg width="960" height="46">
+    <path d="M152,44V8M480,44V8M808,44V8" stroke="#f1fa8c" stroke-width="2"/>
+    <path d="M146,12L152,2L158,12zM474,12L480,2L486,12zM802,12L808,2L814,12z" fill="#f1fa8c"/>
+    <text x="196" y="30" fill="#f1fa8c">read only the needed columns, in parallel</text>
+  </svg>
+  <div class="card" style="border-top:3px solid var(--yellow)">
+    <h3 style="color:var(--yellow)">🪣 Object storage · S3 / GCS / ADLS</h3>
+    <div class="mute">Parquet / ORC files: data stored <b style="color:var(--text)">by column</b>, compressed, with min/max stats per file</div>
+    <div class="cols">
+      <div class="col">date<i></i><i></i><i></i></div><div class="col">region<i></i><i></i><i></i></div><div class="col">amount<i></i><i></i><i></i></div>
+      <div class="col off">cust_id<i></i><i></i><i></i></div><div class="col off">sku<i></i><i></i><i></i></div><div class="col off">price<i></i><i></i><i></i></div>
+      <div class="col off">store<i></i><i></i><i></i></div><div class="col off">+33 more<i></i><i></i><i></i></div>
+      <div style="align-self:center;font-size:13px;color:var(--mute);margin-left:8px">3 of 40 columns read<br><span style="color:var(--red)">red = skipped</span></div>
+    </div>
+    <div class="months"><span class="m">Dec</span><span class="m">Jan</span><span class="m">Feb</span><span class="m">Mar</span><span class="m">Apr</span><span class="m">May</span><span class="m">Jun</span><span class="m">Jul</span><span class="m">Aug</span><span class="m">Sep</span><span class="m">Oct</span><span class="m on">Nov</span></div>
+    <div class="mute" style="margin-top:6px">partitions by date: only November is read, 11 months pruned using stats</div>
+  </div>
+</div>
+<div id="steps">
+  <h2>Query path</h2>
+  <div class="steps">
+    <div class="step"><span class="n" style="background:var(--cyan)">1</span><div><b>Client sends SQL</b><span>A dashboard sends one query to the coordinator.</span></div></div>
+    <div class="step"><span class="n" style="background:var(--purple)">2</span><div><b>Parse &amp; analyze</b><span>Text becomes a tree. The catalog confirms the table, columns and types.</span></div></div>
+    <div class="step"><span class="n" style="background:var(--purple)">3</span><div><b>Optimize</b><span>Stats let it skip data: only Nov partitions, only 3 columns.</span></div></div>
+    <div class="step"><span class="n" style="background:var(--purple)">4</span><div><b>Schedule</b><span>The plan is cut into fragments; each worker gets its own files.</span></div></div>
+    <div class="step"><span class="n" style="background:var(--green)">5</span><div><b>Scan</b><span>Workers read columns from storage in parallel. Hot files come from SSD cache.</span></div></div>
+    <div class="step"><span class="n" style="background:var(--green)">6</span><div><b>Filter &amp; partial aggregate</b><span>Batches of ~1024 values at a time. Each worker sums per region locally.</span></div></div>
+    <div class="step"><span class="n" style="background:var(--pink)">7</span><div><b>Shuffle</b><span>Partial sums move by hash(region), so one worker adds up each region.</span></div></div>
+    <div class="step"><span class="n" style="background:var(--cyan)">8</span><div><b>Result</b><span>Billions of rows in, 4 rows back to the client.</span></div></div>
+  </div>
+  <div class="why">
+    <div><b>Columnar</b>Read only the columns the query uses.</div>
+    <div><b>Pruning</b>Stats skip whole files and partitions.</div>
+    <div><b>Parallel (MPP)</b>Many workers, each on its own slice.</div>
+    <div><b>Vectorized</b>CPU works on batches, not single rows.</div>
+  </div>
+</div>
+</div>
+</body></html>
