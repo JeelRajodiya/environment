@@ -21,6 +21,10 @@ The chat can only show plain text, and your Bash output is never shown to the us
    python3 -I /tmp/claude-viz/<topic>.py 0 </dev/null > /tmp/claude-viz/out.txt; echo $?
    python3 -I -c "import re; f=open('/tmp/claude-viz/out.txt').read().split('\x1b[H')[-1]; print(re.sub(r'\x1b\[[0-9;?]*[A-Za-z]','',f))"
    ```
-4. **Hand over.** Tell the user to split the pane to the right and run `python3 /tmp/claude-viz/<topic>.py`.
+4. **Open it in a split.** In the Herdr desktop app (`herdr-app` is on PATH), open it yourself, using an absolute path:
+   ```sh
+   herdr-app do pane.split '{"direction":"right","argv":["python3","/tmp/claude-viz/<topic>.py"]}'
+   ```
+   Without `herdr-app`, tell the user to split the pane to the right and run `python3 /tmp/claude-viz/<topic>.py`.
 
 If the user wants a browser version instead, write one self-contained HTML file and `open` it.
